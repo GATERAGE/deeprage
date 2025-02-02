@@ -1,4 +1,4 @@
-# src/openmind.py (c) 2025 RAGE
+# src/openmind.py (c) 2025 RAGE GPLv3
 
 import os
 from dotenv import load_dotenv
