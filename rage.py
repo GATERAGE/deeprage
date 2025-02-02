@@ -1,4 +1,8 @@
-# rage.py (c) 2025 Gregory L. Magnusson MIT
+# rage.py
+"""
+RAGE: Retrieval Augmented Generative Engine (Streamlit UI)
+(c) 2025 Gregory L. Magnusson MIT
+"""
 
 import streamlit as st
 from pathlib import Path
@@ -7,19 +11,27 @@ from src.memory import MemoryManager
 from src.openmind import OpenMind
 import logging
 
-logger = logging.getLogger('rage')
+# Configure Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("logs/rage.log"),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger("rage")
 
 class RAGE_UI:
     """RAGE - Retrieval Augmented Generative Engine with Streamlit UI"""
     
     def __init__(self):
         self.setup_session_state()
-        self.config = {}
-        self.model_config = {}
         self.load_css()
         self.load_system_prompt()
         
-        # Initialize systems
+        # Initialize core components
         self.memory = MemoryManager()
         self.openmind = OpenMind()
 
@@ -27,44 +39,38 @@ class RAGE_UI:
         """Initialize session state variables"""
         if "messages" not in st.session_state:
             st.session_state.messages = []
-        if 'provider' not in st.session_state:
+        if "provider" not in st.session_state:
             st.session_state.provider = None
-        if 'selected_model' not in st.session_state:
-            st.session_state.selected_model = None
-        if 'temperature' not in st.session_state:
-            st.session_state.temperature = 0.11  # Default temperature setting
+        if "temperature" not in st.session_state:
+            st.session_state.temperature = 0.11  # Default temperature
 
     def load_css(self):
-        """Load CSS styling"""
+        """Load external CSS for better UI"""
         try:
-            with open('styles.css') as f:
-                st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+            with open("styles.css") as f:
+                st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
         except Exception as e:
             logger.error(f"Error loading CSS: {e}")
 
     def load_system_prompt(self):
         """Load system prompt from prompt.txt"""
         try:
-            with open('prompt.txt', 'r', encoding='utf-8') as f:
+            with open("prompt.txt", "r", encoding="utf-8") as f:
                 self.system_prompt = f.read().strip()
         except Exception as e:
             logger.error(f"Error loading system prompt: {e}")
             self.system_prompt = "Default system prompt."
 
     def initialize_model(self, provider: str):
-        """Initialize or retrieve model instance"""
+        """Initialize the AI model based on the selected provider"""
         try:
             if not provider:
                 st.info("Please select an AI Provider")
                 return None
             
             if provider == "Groq":
-                key = self.openmind.get_api_key('groq')
-                if key:
-                    return GroqHandler(key)
-                else:
-                    st.error("Groq API key not found")
-                    return None
+                key = self.openmind.get_api_key("groq")
+                return GroqHandler(key) if key else None
             
             elif provider == "Ollama":
                 return OllamaHandler()
@@ -86,7 +92,7 @@ class RAGE_UI:
             if not model:
                 return
             
-            # Add message to session state
+            # Add user message to session
             st.session_state.messages.append({"role": "user", "content": prompt})
             
             with st.chat_message("user"):
@@ -95,17 +101,17 @@ class RAGE_UI:
             with st.chat_message("assistant"):
                 with st.spinner("Processing with RAGE..."):
                     try:
-                        # Get relevant context
-                        context = self.memory.retrieve_context(query_embedding=[0.1] * 384)  # Replace with actual embedding
+                        # Retrieve relevant context
+                        context = self.memory.retrieve_context(query_embedding=[0.1] * 384)  # Replace with real embeddings
                         
-                        # Generate response
+                        # Generate AI response
                         response = model.generate_response(
                             prompt=prompt,
                             context=context,
                             temperature=st.session_state.temperature
                         )
                         
-                        # Store conversation
+                        # Store conversation in STM
                         self.memory.store_conversation(query=prompt, response=response)
                         
                         # Display response
@@ -148,3 +154,22 @@ class RAGE_UI:
         """Setup sidebar configuration"""
         with st.sidebar:
             st.header("RAGE Configuration")
+            st.session_state.provider = st.selectbox("Select AI Provider", ["Groq", "Ollama"])
+            st.session_state.temperature = st.slider("Temperature", 0.0, 1.0, 0.11, 0.01)
+
+    def run(self):
+        """Main UI loop"""
+        st.title("🔥 RAGE: Retrieval Augmented Generative Engine")
+        
+        self.setup_sidebar()
+        
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+        
+        user_input = st.chat_input("Type your message...")
+        if user_input:
+            self.process_message(user_input)
+
+if __name__ == "__main__":
+    RAGE_UI().run()
