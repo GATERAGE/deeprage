@@ -1,0 +1,8 @@
+# requirements.txt
+streamlit
+requests
+numpy
+faiss-cpu
+python-dotenv
+tiktoken
+sentence-transformers
