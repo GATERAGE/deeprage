@@ -19,3 +19,7 @@ RAGE/
 ├── prompt.txt             # System prompt
 └── rage.py                # Main Streamlit UI application
 ```
+
+```bash
+pip install --no-cache-dir -r requirements.txt
+```
