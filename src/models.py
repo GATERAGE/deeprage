@@ -1,4 +1,4 @@
-# src/models.py
+# src/models.py (c) 2025 Gregory L. Magnusson MIT
 
 import requests
 import logging
