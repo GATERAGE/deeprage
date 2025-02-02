@@ -1,4 +1,4 @@
-# src/memory.py
+# src/memory.py (c) 2025 Gregory L. Magnusson MIT
 
 import os
 import json
