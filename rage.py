@@ -1,4 +1,4 @@
-# rage.py (c) 2025 Gregory L. Magnusson
+# rage.py (c) 2025 Gregory L. Magnusson MIT
 
 import streamlit as st
 from pathlib import Path
